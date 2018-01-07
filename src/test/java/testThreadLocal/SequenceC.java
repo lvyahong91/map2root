@@ -10,7 +10,7 @@ public class SequenceC implements Sequence{
 
     @Override
     public int getNumber() {
-        numContainer.set(numContainer.get()+3);
+        numContainer.set(numContainer.get()+1);
         return numContainer.get();
     }
 
