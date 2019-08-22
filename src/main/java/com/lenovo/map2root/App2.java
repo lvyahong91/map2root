@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.sun.jndi.url.iiopname.iiopnameURLContextFactory;
+
 
 
 
@@ -17,7 +19,7 @@ import java.util.ListIterator;
  * 处理出映射表，表结构为t_map2root(string basecode,string rootcode)
  *
  */
-public class App 
+public class App2 
 {	
 	private static String driverName="com.mysql.cj.jdbc.Driver";
 	private static String url="jdbc:mysql://localhost:3306/cdl_finance?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8";
@@ -61,38 +63,62 @@ public class App
 	 
 	
 	/**
-	 * 根据sql获取结果集
+	 * 根据col_9为过滤条件获取col_1结果集
 	 * @param sql
 	 * @return
 	 * @throws SQLException
 	 */
-	public static ResultSet getResult(String sql) throws SQLException {
+	public static List<String> getResult(String col_9) throws SQLException {
 		//预防sql注入，使用预编译sql
+		String sql="select  col_1 from cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9=?";
 		ps=connection.prepareStatement(sql);
+		ps.setString(1,col_9);
 		System.out.println("Running: " + sql);
 		resultSet=ps.executeQuery(sql);
 		System.out.println("resultSet="+resultSet);
-//		resultSet.last();
-//		System.out.println("行数="+resultSet.getRow());
-		return resultSet;
+		List<String> list=new ArrayList<String>();
+		while (resultSet.next()) {
+			String col_1 = resultSet.getString(1);
+			System.out.println("col1="+col_1);
+			list.add(col_1);
+		}
+		return list;
+		
 	}
+	/**
+	 * 获取col_9的去重列表
+	 * @param list
+	 * @return
+	 * @throws SQLException
+	 */
+	public static List<String> getDistinctResult() throws SQLException {
+		//预防sql注入，使用预编译sql
+		String sql="select  distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
+		System.out.println("Running: " + sql);
+		resultSet=ps.executeQuery(sql);
+		System.out.println("resultSet="+resultSet);
+		List<String> list=new ArrayList<String>();
+		while (resultSet.next()) {
+			String col_9 = resultSet.getString(1);
+			System.out.println("col9="+col_9);
+			list.add(col_9);
+		}
+		return list;
+	}
+	
 	/**
 	 * 将结果集转换为列表
 	 * @param sql1
 	 * @return
 	 * @throws SQLException
 	 */
-	private static java.util.List<String> getList(String sql1) throws SQLException {
-		ResultSet resultSet3=null;
-		java.util.List<String> list=new ArrayList<String>();
-		resultSet3=getResult(sql1);
-		while (resultSet3.next()) {
-			String col_9 = resultSet3.getString(1);
-			System.out.println("col9="+col_9);
-			list.add(col_9);
-		}
-		return list;
-	}
+	/*
+	 * private static List<String> getList(List<String> list) throws SQLException {
+	 * ResultSet resultSet3=null; java.util.List<String> list=new
+	 * ArrayList<String>(); resultSet3=getResult(list); while (resultSet3.next()) {
+	 * String col_9 = resultSet3.getString(1); System.out.println("col9="+col_9);
+	 * list.add(col_9); } return list; }
+	 */
 	/**
 	 * 查找rootcode的逻辑为根据parent列的code,过滤col_1的memberid,以此为第一重过滤
 	 * 第二重，遍历第一重的memberid，若是在对应的parent列查找不到相同信息，该memberid就是basecode
@@ -102,20 +128,16 @@ public class App
 	 */
 	public static void getBaseCode() throws Exception {
 		//获得col_9的结果集，将结果集转换为list
-		String sql1="select distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
-		java.util.List<String> list0 = getList(sql1);
-		System.out.println("list0的长度 = "+list0.size());
-		//根据list1的数据去表里获取col_1的数据,将结果转换为list
-		/*
-		 * String sql2=
-		 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list0.
-		 * get(9) +"'";
-		 */
-		String sql2=
-				"select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='LPBUWT'";
-		java.util.List<String> list1=getList(sql2);
-		System.out.println("list1的长度 = "+list1.size());
-		getFinalBase(list0,list1);
+//		String sql1="select distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
+		
+		List<String > list_col_9=getDistinctResult();
+		System.out.println("list_col_9的长度 = "+list_col_9.size());
+		//根据list0的col_9列去过滤获取col_1的数据,将结果转换为list
+		for (int i = 0; i < list_col_9.size(); i++) {
+			List<String> list_col_1=getResult(list_col_9.get(i));
+			System.out.println("list_col_1的长度 = "+list_col_1.size());
+			getFinalBase(list_col_9.get(i),list_col_9,list_col_1);
+		}
 		
 	}
 	/**
@@ -124,18 +146,21 @@ public class App
 	 * @param list1
 	 * @throws Exception 
 	 */
-	public static void getFinalBase(java.util.List<String> list0,java.util.List<String> list1) throws Exception {
-		for(int i=0;i<list1.size();i++) {
+	public static void getFinalBase(String col_9,List<String> list_col_9,List<String> list_col_1) throws Exception {
+		for(int i=0;i<list_col_1.size();i++) {
 			//第二重过滤，是根据list1的memberid作为条件，取得新的memberid列
-			String sql2=
-					"select  col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list1.get(i) +"'";
-			java.util.List<String> list2=getList(sql2);
+			/*
+			 * String sql2=
+			 * "select  col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"
+			 * +list_col_1.get(i) +"'"; java.util.List<String> list2=getList(sql2);
+			 */
+			List<String> list2=getResult(list_col_1.get(i));
 			System.out.println("list2的长度 = "+list2.size());
 			if (list2.size() ==0) {
 				System.out.println("不需要再往下找");
-				System.out.println("basecode ="+list1.get(i));
-				System.out.println("parentcode ="+"LPBUWT");
-				updateTable(list1.get(i), "LPBUWT");
+				System.out.println("basecode ="+list_col_1.get(i));
+				System.out.println("parentcode ="+col_9);
+				updateTable(list_col_1.get(i), col_9);
 				continue;
 			}
 			//将list2的数据和list0的值进行比对，若没有相同的，则list2的数据就是basecode
@@ -143,16 +168,19 @@ public class App
 			ListIterator<String> it=list2.listIterator();
 			while(it.hasNext()) {
 				String col_1=(String) it.next();
-				if(list0.contains(col_1) !=true) {
+				if(list_col_9.contains(col_1) !=true) {
 					System.out.println("basecode ="+col_1);
-					System.out.println("parentcode ="+"LPBUWT");
-					updateTable(col_1, "LPBUWT");
+					System.out.println("parentcode ="+col_9);
+					updateTable(col_1, col_9);
 				}else {
-					String sql3=
-							"select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list0.get(3) +"'";
-					java.util.List<String> list3=getList(sql3);
+					/*
+					 * String sql3=
+					 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list0.
+					 * get(3) +"'"; java.util.List<String> list3=getList(sql3);
+					 */
+					List<String> list3=getResult(col_9);
 					System.out.println("list3的长度 = "+list3.size());
-					  getFinalBase(list0,list3);//递归调用本函数，直至找到basecode
+					  getFinalBase(col_9,list_col_9,list3);//递归调用本函数，直至找到basecode
 				}
 			}
 		}
