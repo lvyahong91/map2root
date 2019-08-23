@@ -17,7 +17,7 @@ import java.util.ListIterator;
  * 处理出映射表，表结构为t_map2root(string basecode,string rootcode)
  *
  */
-public class App 
+public class App3 
 {	
 	private static String driverName="com.mysql.cj.jdbc.Driver";
 	private static String url="jdbc:mysql://localhost:3306/cdl_finance?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8";
@@ -28,6 +28,7 @@ public class App
 //	private static Statement statement=null;
 	private static PreparedStatement ps=null;
 	private static ResultSet resultSet=null;
+	private static List<String> list2=null;
 	/**
 	 * 创建hive驱动
 	 * @throws Exception
@@ -71,7 +72,7 @@ public class App
 		ps=connection.prepareStatement(sql);
 		System.out.println("Running: " + sql);
 		resultSet=ps.executeQuery(sql);
-//		System.out.println("resultSet="+resultSet);
+		System.out.println("resultSet="+resultSet);
 //		resultSet.last();
 //		System.out.println("行数="+resultSet.getRow());
 		return resultSet;
@@ -88,7 +89,7 @@ public class App
 		resultSet3=getResult(sql1);
 		while (resultSet3.next()) {
 			String col_9 = resultSet3.getString(1);
-			System.out.println("col9="+col_9);
+			System.out.println("col_11="+col_9);
 			list.add(col_9);
 		}
 		return list;
@@ -102,21 +103,24 @@ public class App
 	 */
 	public static void getBaseCode() throws Exception {
 		//获得col_9的结果集，将结果集转换为list
-		String sql1="select distinct col_11 from cdl_finance.bw_fin_zobpcm009_cdl";
+		String sql1="select distinct col_11 from cdl_finance.bw_fin_zobpcm009_cdl_1";
 		java.util.List<String> list0 = getList(sql1);
 		System.out.println("list0的长度 = "+list0.size());
 		//根据list1的数据去表里获取col_1的数据,将结果转换为list
+		for (int j = 0; j < list0.size(); j++) {
+			String sql2=
+					"select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"+list0.
+					get(j) +"'";
+			List<String> list1=getList(sql2);
+			System.out.println("list1的长度 = "+list1.size());
+			getFinalBase(list0.get(j),list0,list1);
+			
+		}
+		 
 		/*
 		 * String sql2=
-		 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"+list0.
-		 * get(9) +"'";
+		 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='LPBUWT'";
 		 */
-		String sql2=
-				"select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl where col_11='LPVC'";
-		java.util.List<String> list1=getList(sql2);
-		System.out.println("list1的长度 = "+list1.size());
-		System.out.println("此处为第一重col_1的值");
-		getFinalBase(list0,list1);
 		
 	}
 	/**
@@ -125,19 +129,24 @@ public class App
 	 * @param list1
 	 * @throws Exception 
 	 */
-	public static void getFinalBase(List<String> list0,List<String> list1) throws Exception {
+	public static void getFinalBase(String rootcode,List<String> list0,List<String> list1) throws Exception {
 		for(int i=0;i<list1.size();i++) {
 			//第二重过滤，是根据list1的memberid作为条件，取得新的memberid列
 			String sql2=
-					"select  col_1 from  cdl_finance.bw_fin_zobpcm009_cdl where col_11='"+list1.get(i) +"'";
-			List<String> list2=getList(sql2);
+					"select  col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"+list1.get(i) +"'";
+			list2=getList(sql2);
 			System.out.println("list2的长度 = "+list2.size());
-			System.out.println("此处为第二重过滤的col_1的值");
+			/*
+			 * String sql2_col_11=
+			 * "select  col_11 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"
+			 * +list1.get(i) +"'"; java.util.List<String> list2_col_11=getList(sql2_col_11);
+			 * System.out.println("list2_col_11的长度 = "+list2_col_11.size());
+			 */
 			if (list2.size() ==0) {
-				System.out.println("已经找到，可以跳出循环");
+				System.out.println("不需要再往下找");
 				System.out.println("basecode ="+list1.get(i));
-				System.out.println("parentcode ="+"LPVC");
-				updateTable(list1.get(i), "LPVC");
+				System.out.println("parentcode ="+rootcode);
+				updateTable(list1.get(i), rootcode);
 				continue;
 			}
 			//将list2的数据和list0的值进行比对，若没有相同的，则list2的数据就是basecode
@@ -145,26 +154,21 @@ public class App
 			ListIterator<String> it=list2.listIterator();
 			while(it.hasNext()) {
 				String col_1=(String) it.next();
-				if(list0.contains(col_1) !=true) {
-					System.out.println("此处为第二重list_col_1的遍历");
-					System.out.println("basecode ="+col_1);
-					System.out.println("parentcode ="+"LPVC");
-					updateTable(col_1, "LPVC");
+				if(list0.contains(col_1) == true) {
+					getFinalBase(rootcode,list0,list2);//递归调用本函数，直至找到basecode
 				}else {
-					System.out.println("此处else条件生效了");
-					System.out.println("此处为开始第三重过滤的col_1的值");
+					System.out.println("basecode ="+col_1);
+					System.out.println("parentcode ="+rootcode);
+					updateTable(col_1, rootcode);
 					/*
 					 * String sql3=
-					 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list1.
-					 * get(i+1) +"'"; List<String> list3=getList(sql3);
+					 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"+list0.
+					 * get(3) +"'"; List<String> list3=getList(sql3);
 					 * System.out.println("list3的长度 = "+list3.size());
-					 * System.out.println("此处为第三重的list_col_1的遍历");
 					 */
-					getFinalBase(list0,list2);//递归调用本函数，直至找到basecode
+					 
 				}
 			}
-			
-			
 		}
 	}
 

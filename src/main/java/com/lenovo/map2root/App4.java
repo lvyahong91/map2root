@@ -17,7 +17,7 @@ import java.util.ListIterator;
  * 处理出映射表，表结构为t_map2root(string basecode,string rootcode)
  *
  */
-public class App 
+public class App4 
 {	
 	private static String driverName="com.mysql.cj.jdbc.Driver";
 	private static String url="jdbc:mysql://localhost:3306/cdl_finance?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8";
@@ -28,6 +28,7 @@ public class App
 //	private static Statement statement=null;
 	private static PreparedStatement ps=null;
 	private static ResultSet resultSet=null;
+	private static List<String> list2=null;
 	/**
 	 * 创建hive驱动
 	 * @throws Exception
@@ -130,16 +131,18 @@ public class App
 			//第二重过滤，是根据list1的memberid作为条件，取得新的memberid列
 			String sql2=
 					"select  col_1 from  cdl_finance.bw_fin_zobpcm009_cdl where col_11='"+list1.get(i) +"'";
-			List<String> list2=getList(sql2);
+			list2=getList(sql2);
 			System.out.println("list2的长度 = "+list2.size());
+			System.out.println("调试---------");
 			System.out.println("此处为第二重过滤的col_1的值");
 			if (list2.size() ==0) {
 				System.out.println("已经找到，可以跳出循环");
-				System.out.println("basecode ="+list1.get(i));
+				System.out.println("basecode ="+list1.get(0));
 				System.out.println("parentcode ="+"LPVC");
-				updateTable(list1.get(i), "LPVC");
+				updateTable(list1.get(0), "LPVC");
 				continue;
 			}
+		
 			//将list2的数据和list0的值进行比对，若没有相同的，则list2的数据就是basecode
 			//若有相同的数据，需要将该数据作为从list0的过滤条件，重新得到新的list2
 			ListIterator<String> it=list2.listIterator();
@@ -153,19 +156,13 @@ public class App
 				}else {
 					System.out.println("此处else条件生效了");
 					System.out.println("此处为开始第三重过滤的col_1的值");
-					/*
-					 * String sql3=
-					 * "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9='"+list1.
-					 * get(i+1) +"'"; List<String> list3=getList(sql3);
-					 * System.out.println("list3的长度 = "+list3.size());
-					 * System.out.println("此处为第三重的list_col_1的遍历");
-					 */
 					getFinalBase(list0,list2);//递归调用本函数，直至找到basecode
+					
 				}
 			}
 			
-			
-		}
+		}	
+		
 	}
 
 	public static void main(String[] args) throws Exception {

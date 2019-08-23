@@ -74,6 +74,7 @@ public class App2
 		ps=connection.prepareStatement(sql);
 		ps.setString(1,col_9);
 		System.out.println("Running: " + sql);
+		ResultSet resultSet=null;
 		resultSet=ps.executeQuery(sql);
 		System.out.println("resultSet="+resultSet);
 		List<String> list=new ArrayList<String>();
@@ -95,11 +96,13 @@ public class App2
 		//预防sql注入，使用预编译sql
 		String sql="select  distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
 		System.out.println("Running: " + sql);
-		resultSet=ps.executeQuery(sql);
-		System.out.println("resultSet="+resultSet);
+		ResultSet resultSet1=null;
+		System.out.println("预编译语句="+ps);
+		resultSet1=ps.executeQuery(sql);
+		System.out.println("resultSet1="+resultSet1);
 		List<String> list=new ArrayList<String>();
-		while (resultSet.next()) {
-			String col_9 = resultSet.getString(1);
+		while (resultSet1.next()) {
+			String col_9 = resultSet1.getString(1);
 			System.out.println("col9="+col_9);
 			list.add(col_9);
 		}
@@ -128,8 +131,6 @@ public class App2
 	 */
 	public static void getBaseCode() throws Exception {
 		//获得col_9的结果集，将结果集转换为list
-//		String sql1="select distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
-		
 		List<String > list_col_9=getDistinctResult();
 		System.out.println("list_col_9的长度 = "+list_col_9.size());
 		//根据list0的col_9列去过滤获取col_1的数据,将结果转换为list
