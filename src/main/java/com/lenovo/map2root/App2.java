@@ -52,7 +52,7 @@ public class App2
 	 */
 	
 	  public static void updateTable(String basecode,String rootcode) throws Exception {
-		  String sql="insert into cdl_finance.t_map2root(memberid,parenth6) values (?,?)";
+		  String sql="insert into cdl_finance.t_map2root(memberid,parenth9) values (?,?)";
 		  ps=connection.prepareStatement(sql);
 		  ps.setString(1, basecode);
 		  ps.setString(2, rootcode);
@@ -70,12 +70,12 @@ public class App2
 	 */
 	public static List<String> getResult(String col_9) throws SQLException {
 		//预防sql注入，使用预编译sql
-		String sql="select  col_1 from cdl_finance.bw_fin_zobpcm009_cdl_1 where col_9=?";
+		String sql="select  col_1 from cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11=?";
 		ps=connection.prepareStatement(sql);
 		ps.setString(1,col_9);
 		System.out.println("Running: " + sql);
 		ResultSet resultSet=null;
-		resultSet=ps.executeQuery(sql);
+		resultSet=ps.executeQuery();
 		System.out.println("resultSet="+resultSet);
 		List<String> list=new ArrayList<String>();
 		while (resultSet.next()) {
@@ -94,15 +94,16 @@ public class App2
 	 */
 	public static List<String> getDistinctResult() throws SQLException {
 		//预防sql注入，使用预编译sql
-		String sql="select  distinct col_9 from cdl_finance.bw_fin_zobpcm009_cdl_1";
+		String sql="select  distinct col_11 from cdl_finance.bw_fin_zobpcm009_cdl_1";
+		ps=connection.prepareStatement(sql);
 		System.out.println("Running: " + sql);
-		ResultSet resultSet1=null;
-		System.out.println("预编译语句="+ps);
-		resultSet1=ps.executeQuery(sql);
-		System.out.println("resultSet1="+resultSet1);
+		
+		System.out.println("resultset="+resultSet);
+		resultSet=ps.executeQuery(sql);
+		System.out.println("resultSet1="+resultSet);
 		List<String> list=new ArrayList<String>();
-		while (resultSet1.next()) {
-			String col_9 = resultSet1.getString(1);
+		while (resultSet.next()) {
+			String col_9 = resultSet.getString(1);
 			System.out.println("col9="+col_9);
 			list.add(col_9);
 		}

@@ -57,6 +57,7 @@ public class App3
 		  ps.setString(2, rootcode);
 		  System.out.println("Running: " + sql);
 		  ps.executeUpdate();
+		  ps.close();
 		  
 	  }
 	 
@@ -73,6 +74,7 @@ public class App3
 		System.out.println("Running: " + sql);
 		resultSet=ps.executeQuery(sql);
 		System.out.println("resultSet="+resultSet);
+	
 //		resultSet.last();
 //		System.out.println("行数="+resultSet.getRow());
 		return resultSet;
@@ -102,19 +104,24 @@ public class App3
 	 * @throws Exception 
 	 */
 	public static void getBaseCode() throws Exception {
-		//获得col_9的结果集，将结果集转换为list
-		String sql1="select distinct col_11 from cdl_finance.bw_fin_zobpcm009_cdl_1";
-		java.util.List<String> list0 = getList(sql1);
-		System.out.println("list0的长度 = "+list0.size());
-		//根据list1的数据去表里获取col_1的数据,将结果转换为list
-		for (int j = 0; j < list0.size(); j++) {
-			String sql2=
-					"select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='"+list0.
-					get(j) +"'";
-			List<String> list1=getList(sql2);
-			System.out.println("list1的长度 = "+list1.size());
-			getFinalBase(list0.get(j),list0,list1);
-			
+		try {
+			//获得col_9的结果集，将结果集转换为list
+			String sql1 = "select distinct col_11 from cdl_finance.bw_fin_zobpcm009_cdl_1";
+			java.util.List<String> list0 = getList(sql1);
+			System.out.println("list0的长度 = " + list0.size());
+			//根据list1的数据去表里获取col_1的数据,将结果转换为list
+			for (int j = 0; j < list0.size(); j++) {
+				String sql2 = "select col_1 from  cdl_finance.bw_fin_zobpcm009_cdl_1 where col_11='" + list0.get(j)
+						+ "'";
+				List<String> list1 = getList(sql2);
+				System.out.println("list1的长度 = " + list1.size());
+				getFinalBase(list0.get(j), list0, list1);
+			} 
+		} finally {
+			// TODO: handle finally clause
+			resultSet.close();
+			ps.close();
+			connection.close();
 		}
 		 
 		/*
